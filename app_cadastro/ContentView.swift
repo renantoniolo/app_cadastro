@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var viewModel: ViewModel = ViewModel()
+    @State private var showAlert = false
     
     var body: some View {
         VStack(spacing: 10) {
@@ -21,40 +22,55 @@ struct ContentView: View {
                 .aspectRatio(contentMode: .fit)
             TextField("Nome",
                       text: $viewModel.name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .cornerRadius(15)
-                .shadow(color: .gray, radius: 5)
-                .padding(15)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .cornerRadius(15)
+            .shadow(color: .gray, radius: 5)
+            .padding(15)
             TextField("Idade",
                       text: $viewModel.age)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .cornerRadius(15)
-                .shadow(color: .gray, radius: 5)
-                .padding(15)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .cornerRadius(15)
+            .shadow(color: .gray, radius: 5)
+            .padding(15)
             Button(action: {
-                viewModel.inserUser()
+                showAlert = !viewModel.inserUser()
             }) {
                 Text("Adicionar")
                     .padding()
                     .foregroundColor(.blue)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                        .stroke(.blue, lineWidth: 1))
+                            .stroke(.blue, lineWidth: 1))
             }
-            Text(viewModel.error)
-                .font(.headline)
-                .foregroundColor(.red)
-                .padding(15)
-            List(viewModel.users) { item in
-                Text("\(item.name) - \(item.age)")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-            }
-            .background(Color.gray.opacity(0.1))
+            if viewModel.isVisibleList {
+                Text("Lista de Usuários")
+                    .font(.title3)
+                    .foregroundColor(.black)
+                    .padding(10)
+                List(viewModel.users) { item in
+                    Text("\(item.name) - \(item.age)")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .swipeActions {
+                            Button(role: .destructive) {
+                                viewModel.deleteUser(userExcluir: item)
+                                showAlert = true
+                            } label: {
+                                Label("Excluir", systemImage: "trash")
+                            }
+                        }
+                }
+                .background(Color.gray.opacity(0.1))
+        }
         }
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
         .padding()
         .background(Color.gray.opacity(0.1))
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Atenção"),
+                  message: Text("\(viewModel.errorMesage)"),
+                  dismissButton: .default(Text("OK")))
+        }
     }
 }
 
